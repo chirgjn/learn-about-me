@@ -25,6 +25,14 @@ router.get('/signup',function(req, res) {
 	res.render('signup');
 });
 
+router.get('/login',function(req, res) {
+	res.render('login');
+});
+
+router.get('/logout',function(req, res) {
+	req.logout();
+	res.redirect('/');
+});
 
 router.post('/signup', function(req, res, next) {
 	var username = req.body.username;
@@ -42,7 +50,16 @@ router.post('/signup', function(req, res, next) {
 		});
 		newUser.save(next);
 	});
-	res.redirect('/signup');
-});
+}, passport.authenticate('login', {
+	successRedirect: '/',
+	failureRedirect: '/signup',
+	failureFlash: true
+}));
+
+router.post("/login", passport.authenticate('login', {
+	successRedirect: '/',
+	failureRedirect: '/login',
+	failureFlash: true
+}));
 
 module.exports = router;
