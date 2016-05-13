@@ -5,6 +5,15 @@ var User = require('./models/user');
 
 var router = express.Router();
 
+function ensureAuthenticated(req, res, next) {
+	if (req.isAuthenticated()) {
+		next();
+	} else {
+		req.flash('info', 'You must be logged in to see this page.');
+		res.redirect('/login');
+	}
+}
+
 router.use(function(req, res, next) {
 	res.locals.currentUser = req.user;
 	res.locals.errors = req.flash('error');
@@ -34,6 +43,10 @@ router.get('/logout',function(req, res) {
 	res.redirect('/');
 });
 
+router.get('/edit', ensureAuthenticated, function(req, res) {
+	res.render('edit');
+});
+
 router.post('/signup', function(req, res, next) {
 	var username = req.body.username;
 	var password = req.body.password;
@@ -61,5 +74,18 @@ router.post("/login", passport.authenticate('login', {
 	failureRedirect: '/login',
 	failureFlash: true
 }));
+
+router.post('/edit', ensureAuthenticated, function(req, res, next) {
+	req.user.displayName = req.body.displayname;
+	req.user.bio = req.body.bio;
+	req.user.save(function(err) {
+		if (err) {
+			next(err);
+			return;
+		}
+		req.flash('info', "Profile updated!");
+		res.redirect('/edit');
+	});
+});
 
 module.exports = router;
